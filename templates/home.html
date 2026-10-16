@@ -3,23 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Resume Matcher & Parser</title>
+    <title>AI & ML-Powered ATS Resume Matcher & Classifier</title>
     <!-- Modern Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --bg-color: #0b0f19;
             --card-bg: #111827;
+            --card-surface: #182235;
             --card-border: #1f2937;
+            --card-border-focus: #374151;
             --primary: #6366f1;
             --primary-hover: #4f46e5;
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
             --success: #10b981;
-            --success-bg: rgba(16, 185, 129, 0.1);
+            --success-bg: rgba(16, 185, 129, 0.12);
             --danger: #f43f5e;
-            --danger-bg: rgba(244, 63, 94, 0.1);
-            --text-primary: #f3f4f6;
+            --danger-bg: rgba(244, 63, 94, 0.12);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --info: #0ea5e9;
+            --info-bg: rgba(14, 165, 233, 0.12);
+            --text-primary: #f9fafb;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
         }
@@ -33,26 +42,28 @@
             margin: 0;
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(14, 165, 233, 0.05) 0, transparent 50%);
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
-            padding: 24px;
+            padding: 32px 20px;
             color: var(--text-primary);
         }
 
-        /* Loading Spinner Overlay */
+        /* Loading Overlay */
         #loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(11, 15, 25, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(11, 15, 25, 0.88);
+            backdrop-filter: blur(10px);
             z-index: 9999;
             display: none;
             flex-direction: column;
@@ -62,13 +73,14 @@
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(99, 102, 241, 0.1);
+            width: 64px;
+            height: 64px;
+            border: 4px solid rgba(99, 102, 241, 0.15);
             border-left-color: var(--primary);
+            border-top-color: #8b5cf6;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 24px;
         }
 
         @keyframes spin {
@@ -78,43 +90,78 @@
 
         .loading-text {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: 0.5px;
+            letter-spacing: -0.3px;
         }
 
         .loading-subtext {
             font-size: 14px;
             color: var(--text-secondary);
             margin-top: 8px;
+            text-align: center;
+            max-width: 320px;
         }
 
-        /* Shared Dashboard Layout Container */
+        /* Main Shell Container */
         .dashboard-container {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 20px;
+            border-radius: 24px;
             width: 100%;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
             overflow: hidden;
             transition: all 0.3s ease;
         }
 
-        /* Title Area */
+        .upload-layout {
+            max-width: 680px;
+        }
+
+        .results-layout {
+            max-width: 1140px;
+        }
+
+        /* Header Bar */
         .header-panel {
-            padding: 32px 32px 20px 32px;
+            padding: 32px 36px 24px 36px;
             border-bottom: 1px solid var(--card-border);
             text-align: center;
+            position: relative;
+        }
+
+        .badge-ml-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .badge-ml-pill .dot {
+            width: 7px;
+            height: 7px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
         }
 
         h1 {
             font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            background: linear-gradient(to right, #ffffff, #a5b4fc);
+            background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -123,6 +170,7 @@
             margin: 8px 0 0 0;
             font-size: 14px;
             color: var(--text-secondary);
+            line-height: 1.5;
         }
 
         /* Error Banner */
@@ -130,22 +178,51 @@
             background: var(--danger-bg);
             border-left: 4px solid var(--danger);
             padding: 14px 20px;
-            margin: 20px 32px 0 32px;
+            margin: 24px 36px 0 36px;
             border-radius: 8px;
             color: #fda4af;
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        /* Upload Layout (Single Column, Narrower) */
-        .upload-layout {
-            max-width: 540px;
+        /* Mode Switcher Tabs */
+        .tab-switcher {
+            display: flex;
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 4px;
+            margin: 24px 36px 0 36px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .form-content {
-            padding: 32px;
+            padding: 28px 36px 36px 36px;
         }
 
         .upload-grid {
@@ -161,22 +238,30 @@
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 8px;
-            display: block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-label .hint {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
         }
 
         .upload-card {
             position: relative;
             border: 2px dashed var(--card-border);
-            border-radius: 12px;
-            padding: 30px 20px;
+            border-radius: 14px;
+            padding: 28px 20px;
             text-align: center;
-            background: #182235;
+            background: var(--card-surface);
             transition: all 0.2s ease;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
 
         .upload-card:hover {
@@ -186,7 +271,7 @@
 
         .upload-card.file-selected {
             border-color: var(--success);
-            background: rgba(16, 185, 129, 0.03);
+            background: rgba(16, 185, 129, 0.04);
         }
 
         .upload-card input[type="file"] {
@@ -201,8 +286,8 @@
         }
 
         .upload-icon {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             color: var(--text-muted);
             margin-bottom: 12px;
             transition: color 0.2s ease;
@@ -246,13 +331,34 @@
         .upload-card.file-selected .file-status-badge {
             color: #6ee7b7;
             background: var(--success-bg);
-            border-color: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        /* Direct Text Input Areas */
+        .text-input-area {
+            width: 100%;
+            min-height: 140px;
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+            outline: none;
+        }
+
+        .text-input-area:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
 
         .submit-btn {
             width: 100%;
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 14px;
             border: none;
             background: var(--primary-gradient);
             color: #ffffff;
@@ -260,76 +366,71 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.25);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
             transition: all 0.2s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4);
         }
 
-        .submit-btn:active {
-            transform: translateY(0);
+        /* RESULTS DASHBOARD */
+        .results-wrapper {
+            padding: 32px 36px 40px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
         }
 
-        /* Results Layout (Two Columns, Wider) */
-        .results-layout {
-            max-width: 960px;
-        }
-
-        .results-grid {
+        /* Top Grid: Main Score & ML Classification */
+        .top-hero-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 0;
+            gap: 24px;
         }
 
-        @media (min-width: 768px) {
-            .results-grid {
-                grid-template-columns: 320px 1fr;
+        @media (min-width: 900px) {
+            .top-hero-grid {
+                grid-template-columns: 340px 1fr;
             }
         }
 
-        /* Left Column: Score Gauge Panel */
-        .score-panel {
-            padding: 40px 32px;
-            border-bottom: 1px solid var(--card-border);
+        /* Circular Score Card */
+        .score-hero-card {
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 32px 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #161e2e;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
-        @media (min-width: 768px) {
-            .score-panel {
-                border-bottom: none;
-                border-right: 1px solid var(--card-border);
-            }
-        }
-
-        /* Circular SVG Score Chart */
         .circular-chart {
             display: block;
             margin: 0 auto;
-            max-width: 180px;
-            max-height: 180px;
+            max-width: 190px;
+            max-height: 190px;
             transform: rotate(-90deg);
         }
 
         .circle-bg {
             fill: none;
             stroke: #1f2937;
-            stroke-width: 3;
+            stroke-width: 3.5;
         }
 
         .circle {
             fill: none;
-            stroke-width: 3;
+            stroke-width: 3.5;
             stroke-linecap: round;
             stroke: url(#indigoGradient);
             stroke-dasharray: 0 100;
@@ -338,8 +439,8 @@
 
         .percentage-container {
             position: relative;
-            width: 180px;
-            height: 180px;
+            width: 190px;
+            height: 190px;
         }
 
         .percentage-text {
@@ -348,7 +449,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 38px;
+            font-size: 42px;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: -1px;
@@ -358,119 +459,377 @@
         }
 
         .percentage-lbl {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: -2px;
+            margin-top: -4px;
         }
 
-        .score-feedback {
-            margin-top: 24px;
+        .fit-pill {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 6px 16px;
+            border-radius: 20px;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
-            text-align: center;
+            letter-spacing: 0.3px;
         }
 
-        .score-desc {
+        .fit-desc {
             font-size: 13px;
             color: var(--text-secondary);
-            text-align: center;
-            margin-top: 8px;
+            margin-top: 10px;
             line-height: 1.5;
         }
 
-        .reset-btn {
-            margin-top: 32px;
-            padding: 10px 24px;
-            border-radius: 8px;
+        /* ML Role Classification Card */
+        .classification-card {
+            background: var(--card-surface);
             border: 1px solid var(--card-border);
-            background: transparent;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .reset-btn:hover {
-            background: var(--card-border);
-            border-color: var(--text-secondary);
-        }
-
-        /* Right Column: Keyword Match Section */
-        .analysis-panel {
-            padding: 40px 32px;
+            border-radius: 18px;
+            padding: 28px 30px;
             display: flex;
             flex-direction: column;
-            gap: 32px;
+            justify-content: space-between;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
-        .analysis-section {
+        .card-header-tag {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .domains-comparison {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 600px) {
+            .domains-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .domain-box {
+            background: #111827;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .domain-box-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .domain-box-val {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .domain-confidence-bar {
+            margin-top: 10px;
+            height: 6px;
+            background: #1f2937;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .domain-confidence-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 4px;
+        }
+
+        .domain-conf-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .alignment-badge {
+            margin-top: 18px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alignment-badge.match {
+            background: var(--success-bg);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+
+        .alignment-badge.mismatch {
+            background: var(--warning-bg);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        /* 4-Metric Subscores Bar Grid */
+        .subscores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .subscore-card {
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .subscore-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subscore-num {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: #1f2937;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        /* Categorized Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .skills-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .skills-box {
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .section-title {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin: -8px 0 4px 0;
-            line-height: 1.4;
-        }
-
         .badge-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .badge {
-            font-size: 13px;
-            font-weight: 500;
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: flex;
+        .skill-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid transparent;
-            transition: all 0.15s ease;
+            transition: transform 0.15s ease;
         }
 
-        .badge:hover {
+        .skill-badge:hover {
             transform: translateY(-1px);
         }
 
-        .badge.match {
-            background-color: var(--success-bg);
+        .skill-badge.matched {
+            background: var(--success-bg);
             color: #6ee7b7;
-            border-color: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        .badge.missing {
-            background-color: var(--danger-bg);
+        .skill-badge.missing {
+            background: var(--danger-bg);
             color: #fda4af;
-            border-color: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.2);
         }
 
-        .empty-badge-msg {
+        /* Structural Health Panel */
+        .health-card {
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .health-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .health-item {
+            background: #111827;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 13px;
-            color: var(--text-muted);
-            font-style: italic;
+        }
+
+        .health-icon-check {
+            color: #10b981;
+            font-size: 16px;
+        }
+
+        .health-icon-cross {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        /* Recommendations Section */
+        .recommendations-box {
+            background: var(--card-surface);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .rec-card {
+            background: #111827;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rec-card.priority-high {
+            border-left-color: #f43f5e;
+            background: rgba(244, 63, 94, 0.04);
+        }
+
+        .rec-card.priority-medium {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.04);
+        }
+
+        .rec-card.priority-low {
+            border-left-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rec-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .rec-priority-badge {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .rec-priority-badge.high {
+            background: var(--danger-bg);
+            color: #fda4af;
+        }
+
+        .rec-priority-badge.medium {
+            background: var(--warning-bg);
+            color: #fcd34d;
+        }
+
+        .rec-priority-badge.low {
+            background: var(--info-bg);
+            color: #7dd3fc;
+        }
+
+        .rec-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Action Buttons */
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: center;
+        }
+
+        .reset-btn:hover {
+            background: var(--card-border);
+            border-color: var(--text-secondary);
         }
     </style>
 </head>
@@ -479,119 +838,295 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <div class="loading-text">Analyzing Your Documents</div>
-        <div class="loading-subtext">spaCy is parsing syntax and vectorizing text...</div>
+        <div class="loading-text">Machine Learning Inference in Progress</div>
+        <div class="loading-subtext">Executing Domain Classifier, Semantic Vectorizer, and Categorized Skill Gap Analysis...</div>
     </div>
 
-    <!-- Main Container -->
-    <div class="dashboard-container {% if score is defined %}results-layout{% else %}upload-layout{% endif %}">
+    <!-- Main Shell Container -->
+    <div class="dashboard-container {% if analysis is defined %}results-layout{% else %}upload-layout{% endif %}">
         
-        <!-- Header -->
+        <!-- Header Panel -->
         <div class="header-panel">
-            <h1>ATS Resume Matcher & Parser</h1>
-            <p class="subtitle">Evaluate resume alignment and pinpoint critical skill gaps using semantic intelligence</p>
+            <div class="badge-ml-pill">
+                <span class="dot"></span>
+                ML ATS Engine v2.0 &bull; 10 Tech Domains
+            </div>
+            <h1>ATS Resume Matcher & Classifier</h1>
+            <p class="subtitle">Multi-factor Machine Learning ATS evaluation featuring Domain Role Classification, Semantic Vectorization, and Actionable Gap Recommendations.</p>
         </div>
 
-        <!-- Error Panel -->
+        <!-- Error Alert -->
         {% if error %}
         <div class="error-banner">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
             <span>{{ error }}</span>
         </div>
         {% endif %}
 
-        {% if score is defined %}
+        {% if analysis is defined %}
         <!-- RESULTS DASHBOARD VIEW -->
-        <div class="results-grid">
-            
-            <!-- Left Panel: Score Circle -->
-            <div class="score-panel">
-                <div class="percentage-container">
-                    <svg viewBox="0 0 36 36" class="circular-chart">
-                        <defs>
-                            <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#6366f1" />
-                                <stop offset="100%" stop-color="#8b5cf6" />
-                            </linearGradient>
-                        </defs>
-                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path id="progress-circle" class="circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <div class="percentage-text">
-                        <span>{{ score | int }}%</span>
-                        <span class="percentage-lbl">Match</span>
-                    </div>
-                </div>
+        <div class="results-wrapper">
 
-                <div class="score-feedback">
-                    {% if score >= 80 %}
-                        Excellent Fit!
-                    {% elif score >= 55 %}
-                        Good Match
-                    {% else %}
-                        Underqualified
-                    {% endif %}
-                </div>
-                <div class="score-desc">
-                    {% if score >= 80 %}
-                        Your resume strongly aligns with the core requirements of this job.
-                    {% elif score >= 55 %}
-                        You have solid matches, but addressing the skill gaps below will improve results.
-                    {% else %}
-                        Key technical requirements are missing. Review the gaps to customize your profile.
-                    {% endif %}
-                </div>
-
-                <button class="reset-btn" onclick="window.location.href='/'">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v12"></path>
-                    </svg>
-                    Scan Another Resume
-                </button>
-            </div>
-
-            <!-- Right Panel: Keyword Analysis -->
-            <div class="analysis-panel">
+            <!-- Top Hero Grid: Composite Score + Domain Classifier -->
+            <div class="top-hero-grid">
                 
-                <!-- Matched Keywords -->
-                <div class="analysis-section">
-                    <div class="section-title" style="color: var(--success);">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <!-- Circular Score Hero Card -->
+                <div class="score-hero-card">
+                    <div class="percentage-container">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <defs>
+                                <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6366f1" />
+                                    <stop offset="100%" stop-color="#8b5cf6" />
+                                </linearGradient>
+                            </defs>
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="progress-circle" class="circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         </svg>
-                        Matched Skills & Keywords ({{ matched_keywords | length }})
+                        <div class="percentage-text">
+                            <span>{{ analysis.overall_score | int }}%</span>
+                            <span class="percentage-lbl">ATS Fit</span>
+                        </div>
                     </div>
-                    <p class="section-desc">These terms from the job description were successfully found in your resume.</p>
-                    <div class="badge-list">
-                        {% for kw in matched_keywords %}
-                            <div class="badge match">✓ {{ kw }}</div>
-                        {% else %}
-                            <div class="empty-badge-msg">No matched keywords found.</div>
-                        {% endfor %}
+
+                    <div class="fit-pill" style="background-color: {{ analysis.fit_color }}22; color: {{ analysis.fit_color }}; border: 1px solid {{ analysis.fit_color }}44;">
+                        {{ analysis.fit_level }}
                     </div>
+                    <div class="fit-desc">{{ analysis.fit_desc }}</div>
                 </div>
 
-                <!-- Missing Keywords -->
-                <div class="analysis-section">
-                    <div class="section-title" style="color: var(--danger);">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <!-- Domain Role Classification Card -->
+                <div class="classification-card">
+                    <div>
+                        <div class="card-header-tag">
+                            <div class="card-title">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                </svg>
+                                ML Domain & Role Classifier
+                            </div>
+                            <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">LogisticRegression + TF-IDF</span>
+                        </div>
+
+                        <div class="domains-comparison">
+                            <!-- Resume Domain Box -->
+                            <div class="domain-box">
+                                <div class="domain-box-label">Candidate Profile Domain</div>
+                                <div class="domain-box-val">{{ analysis.domain_analysis.resume_domain }}</div>
+                                <div class="domain-confidence-bar">
+                                    <div class="domain-confidence-fill" style="width: {{ analysis.domain_analysis.resume_confidence }}%;"></div>
+                                </div>
+                                <div class="domain-conf-text">
+                                    <span>Model Confidence</span>
+                                    <strong>{{ analysis.domain_analysis.resume_confidence }}%</strong>
+                                </div>
+                            </div>
+
+                            <!-- Job Description Domain Box -->
+                            <div class="domain-box">
+                                <div class="domain-box-label">Target Job Role Domain</div>
+                                <div class="domain-box-val">{{ analysis.domain_analysis.jd_domain }}</div>
+                                <div class="domain-confidence-bar">
+                                    <div class="domain-confidence-fill" style="width: {{ analysis.domain_analysis.jd_confidence }}%; background: var(--secondary-gradient);"></div>
+                                </div>
+                                <div class="domain-conf-text">
+                                    <span>Model Confidence</span>
+                                    <strong>{{ analysis.domain_analysis.jd_confidence }}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alignment Badge -->
+                    <div class="alignment-badge {% if analysis.domain_analysis.is_direct_match %}match{% else %}mismatch{% endif %}">
+                        {% if analysis.domain_analysis.is_direct_match %}
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Direct Domain Match! The candidate profile perfectly aligns with the target technical category.</span>
+                        {% else %}
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
-                        Missing Skills & Gaps ({{ missing_keywords | length }})
+                        <span>Domain Divergence: Candidate specializes in {{ analysis.domain_analysis.resume_domain }}, whereas the role targets {{ analysis.domain_analysis.jd_domain }}.</span>
+                        {% endif %}
                     </div>
-                    <p class="section-desc">Consider adding these keywords to your resume to increase compatibility.</p>
+                </div>
+
+            </div>
+
+            <!-- Subscores 4-Card Grid -->
+            <div class="subscores-grid">
+                <!-- Semantic Relevance -->
+                <div class="subscore-card">
+                    <div class="subscore-title">
+                        <span>Semantic Contextual Match</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">TF-IDF (1,2-gram)</span>
+                    </div>
+                    <div class="subscore-num">{{ analysis.sub_scores.semantic }}%</div>
+                    <div class="progress-track">
+                        <div class="progress-bar-fill" style="width: {{ analysis.sub_scores.semantic }}%; background: #6366f1;"></div>
+                    </div>
+                </div>
+
+                <!-- Skill Coverage -->
+                <div class="subscore-card">
+                    <div class="subscore-title">
+                        <span>Technical Skills Coverage</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">{{ analysis.skills_analysis.total_matched }}/{{ analysis.skills_analysis.total_jd_skills }} Required</span>
+                    </div>
+                    <div class="subscore-num">{{ analysis.sub_scores.skills }}%</div>
+                    <div class="progress-track">
+                        <div class="progress-bar-fill" style="width: {{ analysis.sub_scores.skills }}%; background: #10b981;"></div>
+                    </div>
+                </div>
+
+                <!-- Domain Alignment -->
+                <div class="subscore-card">
+                    <div class="subscore-title">
+                        <span>Role & Category Fit</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">Probability Vector</span>
+                    </div>
+                    <div class="subscore-num">{{ analysis.sub_scores.domain }}%</div>
+                    <div class="progress-track">
+                        <div class="progress-bar-fill" style="width: {{ analysis.sub_scores.domain }}%; background: #0ea5e9;"></div>
+                    </div>
+                </div>
+
+                <!-- ATS Health -->
+                <div class="subscore-card">
+                    <div class="subscore-title">
+                        <span>ATS Format & Health</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">Verbs & Metrics</span>
+                    </div>
+                    <div class="subscore-num">{{ analysis.sub_scores.ats_health }}%</div>
+                    <div class="progress-track">
+                        <div class="progress-bar-fill" style="width: {{ analysis.sub_scores.ats_health }}%; background: #8b5cf6;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Matrix Section -->
+            <div class="skills-grid">
+                
+                <!-- Matched Skills -->
+                <div class="skills-box">
+                    <div class="card-title" style="color: var(--success);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Matched Technical & Soft Skills ({{ analysis.skills_analysis.all_matched | length }})
+                    </div>
                     <div class="badge-list">
-                        {% for kw in missing_keywords %}
-                            <div class="badge missing">+ {{ kw }}</div>
+                        {% for skill in analysis.skills_analysis.all_matched %}
+                        <span class="skill-badge matched">✓ {{ skill }}</span>
                         {% else %}
-                            <div class="empty-badge-msg">Perfect keyword alignment! No missing terms.</div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-style: italic;">No specific skill matches detected.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Missing Skills -->
+                <div class="skills-box">
+                    <div class="card-title" style="color: var(--danger);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        Missing Skills & ATS Gaps ({{ analysis.skills_analysis.all_missing | length }})
+                    </div>
+                    <div class="badge-list">
+                        {% for skill in analysis.skills_analysis.all_missing %}
+                        <span class="skill-badge missing">+ {{ skill }}</span>
+                        {% else %}
+                        <div style="font-size: 13px; color: #6ee7b7; font-style: italic;">Perfect skill coverage! Zero critical gaps identified.</div>
                         {% endfor %}
                     </div>
                 </div>
 
             </div>
+
+            <!-- ATS Structural Health Panel -->
+            <div class="health-card">
+                <div class="card-title">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    ATS Format & Structural Health Breakdown
+                </div>
+                <div class="health-features-grid">
+                    <div class="health-item">
+                        {% if analysis.ats_health.has_email %}
+                        <span class="health-icon-check">✓</span>
+                        {% else %}
+                        <span class="health-icon-cross">✗</span>
+                        {% endif %}
+                        <span>Email Address</span>
+                    </div>
+
+                    <div class="health-item">
+                        {% if analysis.ats_health.has_phone %}
+                        <span class="health-icon-check">✓</span>
+                        {% else %}
+                        <span class="health-icon-cross">✗</span>
+                        {% endif %}
+                        <span>Phone Contact</span>
+                    </div>
+
+                    <div class="health-item">
+                        {% if analysis.ats_health.has_linkedin_or_github %}
+                        <span class="health-icon-check">✓</span>
+                        {% else %}
+                        <span class="health-icon-cross">✗</span>
+                        {% endif %}
+                        <span>LinkedIn / GitHub</span>
+                    </div>
+
+                    <div class="health-item">
+                        <span class="health-icon-check">✓</span>
+                        <span>{{ analysis.ats_health.detected_sections | length }} Core Sections</span>
+                    </div>
+
+                    <div class="health-item">
+                        <span class="health-icon-check">✓</span>
+                        <span>{{ analysis.ats_health.quantified_achievements_count }} Quantified Metrics</span>
+                    </div>
+
+                    <div class="health-item">
+                        <span class="health-icon-check">✓</span>
+                        <span>{{ analysis.ats_health.action_verbs_count }} Power Verbs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI / ML Optimization Recommendations -->
+            <div class="recommendations-box">
+                <div class="card-title">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Targeted Optimization Recommendations
+                </div>
+                
+                {% for rec in recommendations %}
+                <div class="rec-card priority-{{ rec.priority }}">
+                    <div class="rec-header">
+                        <div class="rec-title">{{ rec.title }}</div>
+                        <span class="rec-priority-badge {{ rec.priority }}">{{ rec.priority }} Priority</span>
+                    </div>
+                    <p class="rec-desc">{{ rec.advice }}</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Button -->
+            <button class="reset-btn" onclick="window.location.href='/'">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v12"></path>
+                </svg>
+                Analyze Another Resume
+            </button>
 
         </div>
 
@@ -601,78 +1136,145 @@
                 setTimeout(() => {
                     const circle = document.getElementById('progress-circle');
                     if(circle) {
-                        circle.style.strokeDasharray = "{{ score | int }} 100";
+                        circle.style.strokeDasharray = "{{ analysis.overall_score | int }} 100";
                     }
                 }, 100);
             });
         </script>
 
         {% else %}
-        <!-- UPLOAD FORM VIEW -->
+        <!-- INPUT VIEW (TABS: PDF OR DIRECT TEXT) -->
+        
+        <!-- Tab Switcher -->
+        <div class="tab-switcher">
+            <button type="button" class="tab-btn active" id="tab-pdf" onclick="switchTab('pdf')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Upload PDFs
+            </button>
+            <button type="button" class="tab-btn" id="tab-text" onclick="switchTab('text')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Paste Direct Text
+            </button>
+        </div>
+
         <div class="form-content">
-            <form id="upload-form" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-                
-                <div class="upload-grid">
-                    
+            <form id="matcher-form" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                <input type="hidden" name="input_mode" id="input_mode" value="pdf">
+
+                <!-- PDF Upload Mode -->
+                <div id="pdf-inputs" class="upload-grid">
                     <!-- Resume Upload Card -->
                     <div>
-                        <span class="upload-label">Resume (PDF)</span>
+                        <div class="upload-label">
+                            <span>Candidate Resume (PDF)</span>
+                            <span class="hint">Clean single or multi-column PDF</span>
+                        </div>
                         <div class="upload-card" id="resume-card">
-                            <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             <div class="upload-text">Upload Resume PDF</div>
-                            <div class="upload-subtext">Drag and drop or click to browse</div>
-                            <input type="file" name="resume_pdf" id="resume_pdf" accept=".pdf" required onchange="handleFileChange('resume_pdf', 'resume-card')">
+                            <div class="upload-subtext">Drag and drop or browse from computer</div>
+                            <input type="file" name="resume_pdf" id="resume_pdf" accept=".pdf" onchange="handleFileChange('resume_pdf', 'resume-card')">
                             <div class="file-status-badge" id="resume_pdf-status">No file chosen</div>
                         </div>
                     </div>
 
                     <!-- Job Description Upload Card -->
                     <div>
-                        <span class="upload-label">Job Description (PDF)</span>
+                        <div class="upload-label">
+                            <span>Job Description (PDF)</span>
+                            <span class="hint">Role requirements & qualifications</span>
+                        </div>
                         <div class="upload-card" id="jd-card">
-                            <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
                             <div class="upload-text">Upload Job Description PDF</div>
-                            <div class="upload-subtext">Drag and drop or click to browse</div>
-                            <input type="file" name="jd_pdf" id="jd_pdf" accept=".pdf" required onchange="handleFileChange('jd_pdf', 'jd-card')">
+                            <div class="upload-subtext">Drag and drop or browse from computer</div>
+                            <input type="file" name="jd_pdf" id="jd_pdf" accept=".pdf" onchange="handleFileChange('jd_pdf', 'jd-card')">
                             <div class="file-status-badge" id="jd_pdf-status">No file chosen</div>
                         </div>
                     </div>
+                </div>
 
+                <!-- Direct Text Input Mode (Hidden by default) -->
+                <div id="text-inputs" class="upload-grid" style="display: none;">
+                    <div>
+                        <div class="upload-label">
+                            <span>Candidate Resume Text</span>
+                            <span class="hint">Paste resume contents</span>
+                        </div>
+                        <textarea name="resume_text" id="resume_text" class="text-input-area" placeholder="Paste full resume text here (Summary, Skills, Experience, Education)..."></textarea>
+                    </div>
+
+                    <div>
+                        <div class="upload-label">
+                            <span>Job Description Text</span>
+                            <span class="hint">Paste target job description</span>
+                        </div>
+                        <textarea name="jd_text" id="jd_text" class="text-input-area" placeholder="Paste full job posting requirements and responsibilities here..."></textarea>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit" class="submit-btn">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
-                    Compare Documents
+                    Run Machine Learning ATS Analysis
                 </button>
 
             </form>
         </div>
 
         <script>
-            // Interactively update UI when user chooses a file
+            function switchTab(mode) {
+                const pdfBtn = document.getElementById('tab-pdf');
+                const textBtn = document.getElementById('tab-text');
+                const pdfInputs = document.getElementById('pdf-inputs');
+                const textInputs = document.getElementById('text-inputs');
+                const modeInput = document.getElementById('input_mode');
+                const resumePdf = document.getElementById('resume_pdf');
+                const jdPdf = document.getElementById('jd_pdf');
+
+                if (mode === 'pdf') {
+                    pdfBtn.classList.add('active');
+                    textBtn.classList.remove('active');
+                    pdfInputs.style.display = 'flex';
+                    textInputs.style.display = 'none';
+                    modeInput.value = 'pdf';
+                    resumePdf.setAttribute('required', 'required');
+                    jdPdf.setAttribute('required', 'required');
+                } else {
+                    textBtn.classList.add('active');
+                    pdfBtn.classList.remove('active');
+                    pdfInputs.style.display = 'none';
+                    textInputs.style.display = 'flex';
+                    modeInput.value = 'text';
+                    resumePdf.removeAttribute('required');
+                    jdPdf.removeAttribute('required');
+                }
+            }
+
             function handleFileChange(inputId, cardId) {
                 const fileInput = document.getElementById(inputId);
                 const card = document.getElementById(cardId);
                 const statusBadge = document.getElementById(inputId + '-status');
                 
                 if (fileInput.files && fileInput.files.length > 0) {
-                    const filename = fileInput.files[0].name;
                     card.classList.add('file-selected');
-                    statusBadge.innerText = filename;
+                    statusBadge.innerText = fileInput.files[0].name;
                 } else {
                     card.classList.remove('file-selected');
                     statusBadge.innerText = 'No file chosen';
                 }
             }
 
-            // Show full screen overlay on form submission
             function showLoading() {
                 const overlay = document.getElementById('loading-overlay');
                 overlay.style.display = 'flex';

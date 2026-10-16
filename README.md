@@ -1,97 +1,162 @@
-# ATS Resume Matcher & Parser
+# 🚀 ML-Powered ATS Resume Matcher & Classifier
 
-An AI-powered Applicant Tracking System (ATS) matching tool that extracts text from resumes and job descriptions, calculates semantic compatibility, and provides detailed skill gap analysis.
-
-The application is built on a Python Flask backend utilizing advanced Natural Language Processing (NLP) via `spaCy` and `scikit-learn` and rendered on a modern slate-and-indigo dashboard UI.
+An end-to-end **Machine Learning & NLP** Applicant Tracking System (ATS) matching tool that classifies candidate profiles across 10 industry tech domains, extracts categorized technical skills, computes multi-factor semantic alignment, and generates targeted resume optimization recommendations.
 
 ---
 
-## 🚀 Key Features
+## 🌟 Key Machine Learning & NLP Features
 
-* **PDF Parsing**: Automatically extracts text from uploaded PDF documents with robust error handling for scanned or corrupted files.
-* **Semantic Analysis**: Calculates overall contextual similarity using **TF-IDF Vectorization** and **Cosine Similarity** metrics.
-* **Skill & Keyword Extraction**: Leverages spaCy's Part-of-Speech (POS) tagging and noun-chunking to parse technologies, frameworks, and job titles.
-* **Keyword Gap Analysis**: Side-by-side visualization of **Matched Skills** vs. **Missing Skills** to give job seekers clear, actionable customization instructions.
-* **Premium Dashboard UI**: Responsive slate/indigo dark-mode dashboard featuring an animated circular progress gauge, custom file drop zones, and a processing loading wheel overlay.
+1. **Supervised Resume Domain Classifier**:
+   - Classifies candidate resumes and job postings into 10 industry engineering domains (Data Science, Machine Learning & AI, Full Stack, Backend, Frontend, DevOps & Cloud, Cybersecurity, Mobile App Dev, QA & Testing, Data Engineering).
+   - Trained using **TF-IDF N-gram feature representation** (unigrams + bigrams with sublinear TF scaling) combined with a **Multinomial Logistic Regression** model with balanced class weighting.
+   - Outputs calibrated probability distributions and confidence percentages for candidate profiling.
+
+2. **Multi-Factor ML ATS Scoring Engine**:
+   - Rather than simple keyword count or single-metric TF-IDF, the scoring engine uses an ensemble formula:
+     - **Semantic Relevance (35%)**: TF-IDF contextual cosine similarity.
+     - **Skill Coverage (25%)**: Ratio of matched vs. required hard & soft skills across technical taxonomies.
+     - **Domain Alignment (20%)**: Cosine similarity between candidate and job posting probability vectors.
+     - **ATS Formatting & Health (20%)**: Structural evaluation checking section completeness, action power verbs, and quantified achievements (metrics, percentages, numbers).
+
+3. **Categorized Skill & Entity Extraction**:
+   - Boundary-aware extraction across Programming Languages, Web Frameworks, Cloud & DevOps, Databases, AI/ML tools, QA Automation, and Leadership methodologies.
+   - Comprehensive **Keyword Gap Analysis** detailing Matched Skills vs. Missing Skill Gaps.
+
+4. **Automated AI Optimization Recommendations**:
+   - Generates prioritized recommendations (High, Medium, Low) to improve ATS clearance, including missing high-yield keywords, power verb replacements, and structural adjustments.
+
+5. **Dual Input & RESTful ML API**:
+   - Supports both PDF file uploads (using PyMuPDF with PyPDF2 fallback) and direct text paste.
+   - Exposes `/api/analyze` and `/api/model-info` JSON endpoints for programmatic integration.
 
 ---
 
-## 🛠️ Tech Stack
-
-* **Backend**: Python 3, Flask
-* **NLP & Similarity**: spaCy (using the lightweight `en_core_web_sm` model), Scikit-Learn (TF-IDF Vectorizer)
-* **File Processing**: PyPDF2
-* **Frontend**: HTML5, CSS3, JavaScript (Inter & Plus Jakarta Sans typography)
-* **Production Server**: Gunicorn
-
----
-
-## 📂 Project Directory Structure
+## 🛠️ Architecture & Tech Stack
 
 ```text
+├── models/
+│   ├── dataset.py                # Synthetic & multi-domain training dataset generator
+│   ├── train_classifier.py       # ML Pipeline training, cross-validation & artifact export
+│   └── resume_classifier.joblib  # Trained model & vectorizer artifact
+├── ml_engine/
+│   ├── classifier.py             # Inference module for domain prediction & probability scoring
+│   ├── skill_extractor.py        # Categorized skill taxonomy & boundary-aware extraction
+│   ├── ats_scorer.py             # Multi-factor ATS scoring formula & formatting heuristics
+│   └── recommender.py            # Automated AI recommendations generator
+├── utils/
+│   └── text_extractor.py         # Robust PDF extraction (PyMuPDF + PyPDF2 fallback)
 ├── templates/
-│   └── home.html       # Single-page frontend dashboard template
-├── app.py              # Main Flask server & NLP parsing logic
-├── requirements.txt    # Production dependencies
-└── README.md           # Documentation
+│   └── home.html                 # Modern Slate/Indigo Dashboard with animated gauges & badges
+├── app.py                        # Flask backend & RESTful inference API
+├── requirements.txt              # Production dependencies
+├── test_ml.py                    # Automated test suite for ML pipeline
+└── scratch/                      # Test clients and temporary scripts
 ```
 
----
-
-## ⚙️ Local Installation & Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repository-url>
-   cd project1
-   ```
-
-2. **Set up a virtual environment (optional but recommended):**
-   ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-
-3. **Install the required packages:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Download the spaCy NLP English model:**
-   ```bash
-   python -m spacy download en_core_web_sm
-   ```
-
-5. **Start the Flask development server:**
-   ```bash
-   python app.py
-   ```
-
-6. **Open your browser:**
-   Navigate to `http://127.0.0.1:5000/`
+- **Core ML / NLP**: Scikit-Learn (`TfidfVectorizer`, `LogisticRegression`), NumPy, Joblib
+- **Document Extraction**: PyMuPDF (`fitz`), PyPDF2
+- **Backend Web Server**: Python 3.10+, Flask, Gunicorn
+- **Frontend UI**: Responsive HTML5, Vanilla CSS3 (Slate & Indigo theme, glassmorphism, SVG gauges), JavaScript
 
 ---
 
-## 🧪 Testing
+## 📊 Model Training & Evaluation
 
-The repository contains test validations to assert the extraction and matching logic. To run the automated NLP test suite:
+The repository includes a complete training pipeline with cross-validation and classification reports.
 
+### Run Training:
 ```bash
-python -m unittest scratch/test_nlp_features.py
+python -m models.train_classifier
 ```
+
+### Metrics:
+- **Corpus**: 500 multi-domain technical profiles across 10 balanced domains.
+- **5-Fold Cross Validation Accuracy**: ~99.5% - 100% on domain classification.
+- **Feature Space**: Sublinear TF-IDF (1, 2-grams) with 2,300+ domain-specific vocabulary features.
 
 ---
 
-## ☁️ Deployment on Render
+## ⚡ Quickstart & Installation
 
-This project is optimized out-of-the-box to run on free hosting tiers (such as Render) by utilizing the low-memory `en_core_web_sm` model.
+### 1. Clone the repository:
+```bash
+git clone <your-repository-url>
+cd resume-checker
+```
 
-1. Connect your repository to **Render**.
-2. Select **Web Service** and choose **Python** runtime.
-3. Configure the following build variables:
-   * **Build Command**: `pip install -r requirements.txt && python -m spacy download en_core_web_sm`
-   * **Start Command**: `gunicorn app:app`
-   * **Instance Type**: `Free`
+### 2. Set up virtual environment:
+```bash
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+```
+
+### 3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### 4. (Optional) Run automated tests:
+```bash
+python test_ml.py
+python scratch/test_server.py
+```
+
+### 5. Launch the application:
+```bash
+python app.py
+```
+Open your browser at `http://127.0.0.1:5000/`.
+
+---
+
+## 🔌 REST API Usage
+
+### Analyze Resume Endpoint: `POST /api/analyze`
+**Request Payload (JSON or multipart/form-data):**
+```json
+{
+  "resume_text": "Experienced Machine Learning Engineer skilled in PyTorch, Python, Docker, AWS...",
+  "jd_text": "Seeking an ML Engineer with PyTorch, Computer Vision, Docker, and Kubernetes..."
+}
+```
+
+**Sample Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "overall_score": 78.5,
+    "fit_level": "Strong Match",
+    "sub_scores": {
+      "semantic": 62.4,
+      "skills": 85.0,
+      "domain": 94.2,
+      "ats_health": 80.0
+    },
+    "domain_classification": {
+      "resume_domain": "Machine Learning & AI",
+      "resume_confidence": 91.2,
+      "jd_domain": "Machine Learning & AI",
+      "jd_confidence": 88.7,
+      "is_direct_match": true
+    },
+    "skills_gap_analysis": {
+      "all_matched": ["PyTorch", "Python", "Docker", "AWS"],
+      "all_missing": ["Kubernetes", "Computer Vision"]
+    },
+    "recommendations": [
+      {
+        "priority": "high",
+        "title": "Incorporate Key Missing Technologies",
+        "advice": "The job description specifically targets Kubernetes, Computer Vision..."
+      }
+    ]
+  }
+}
+```
+
+### Model Info Endpoint: `GET /api/model-info`
+Returns active model parameters, vectorizer configuration, and supported classes.
